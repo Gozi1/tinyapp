@@ -59,11 +59,13 @@ app.get("/set", (req, res) => {
   res.render("urls_show",templateVars); 
 });
 
+app.post("/urls/:id/delete", (req, res) => {
+  // appends a random string to the posted url
+  delete urlDatabase[req.params.id];
+  res.redirect("/urls");
+});
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
-  console.log(longURL);
-  console.log(req.params);
-  console.log(req.params.id);
   res.redirect(longURL);
 });
 

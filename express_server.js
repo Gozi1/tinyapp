@@ -64,6 +64,11 @@ app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
+app.post("/urls/:id/update", (req, res) => {
+  // appends a random string to the posted url
+  urlDatabase[req.params.id] = req.body.newURL;
+  res.redirect(`/urls/${req.params.id}`);
+});
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);

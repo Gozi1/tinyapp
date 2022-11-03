@@ -40,9 +40,12 @@ const findUserByEmailAndPassword = (email, password) =>{
 
   for (const userId in users) {
       const user = users[userId];
-      if (user.email === email && user.password === password) {
-          return user;
+      if (user.email === email) {
+          if(user.password === password) return user;
+
+          else return undefined;
       }
+      
   }
   return null;
 }
@@ -52,46 +55,52 @@ const findUserByEmailAndPassword = (email, password) =>{
 
 //Get all urls
  app.get("/urls", (req, res) => {
+  const userID =req.cookies['user_id'];
   const templateVars = { 
     urls: urlDatabase, 
-    user: req.cookies['user_id']
+    user: users[userID]
      };
   res.render("urls_index",templateVars);
  });
 
  //Get new url page
  app.get("/urls/new", (req, res) => {
+  const userID =req.cookies['user_id']
   const templateVars = {  
-    user: req.cookies['user_id']
+    user: users[userID]
      };
   res.render("urls_new",templateVars);
 });
 
  app.get("/urls/:id", (req, res) => {
+  const userID =req.cookies['user_id']
   const templateVars = { 
     id: req.params.id, 
     longURL:urlDatabase[req.params.id],
-    user: req.cookies['user_id'] };
+    user: users[userID] };
   res.render("urls_show",templateVars);
  });
 
  //Get website for URL
  app.get("/u/:id", (req, res) => {
+  const userID =req.cookies['user_id']
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
 
 //Get register
 app.get("/register", (req, res) => {
+  const userID =req.cookies['user_id']
   const templateVars = {  
-    user: req.cookies['user_id']
+    user: users[userID]
      };
   res.render("urls_register",templateVars);
 });
 //Get login
 app.get("/login", (req, res) => {
+  const userID =req.cookies['user_id']
   const templateVars = {  
-    user: req.cookies['user_id']
+    user: users[userID]
      };
   res.render("urls_login",templateVars);
 });
@@ -124,8 +133,11 @@ app.post("/login", (req, res) => {
   const password = req.body.password;
   const user = findUserByEmailAndPassword(email, password);
 
-  if(user)res.cookie('user_id',user);
-  else return res.status(400).send('user does not exist');
+  if(user)res.cookie('user_id',user.id);
+
+  else if(user === undefined) return res.status(403).send('wrong password');
+
+  else return res.status(403).send('user does not exist');
 
   res.redirect(`/urls`);
 });
@@ -142,9 +154,9 @@ app.post("/register", (req, res) => {
         return res.status(400).send('email and password cannot be blank');
     }
     const user = findUserByEmailAndPassword(email, password);
-    
-    if (user) {
-        return res.status(400).send("a user with those credentials  already exists");
+    console.log(user);
+    if (user || user === undefined) {
+        return res.status(400).send("a user similar credentials already exists");
     }
 
   else{
@@ -154,7 +166,7 @@ app.post("/register", (req, res) => {
     password: req.body.password,
   };
 
-  res.cookie('user_id',users[`user${randomUserID}ID`]);
+  res.cookie('user_id',users[`user${randomUserID}ID`].id);
   
 }
 
@@ -165,7 +177,7 @@ res.redirect('/urls');
 app.post("/logout", (req, res) => {
 
   res.clearCookie('user_id');
-  res.redirect(`/urls`);
+  res.redirect(`/login`);
 });
 
  app.listen(PORT, () => {

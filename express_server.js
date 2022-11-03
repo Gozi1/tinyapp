@@ -1,3 +1,4 @@
+/** TO MENTOR I'LL MAKE SURE TO ADD THE CSS STYLING TOWARDS AT THE END OF TESTING OR REST */
 const express = require("express");
 const  cookieParser = require('cookie-parser');
 const app = express();

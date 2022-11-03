@@ -19,14 +19,14 @@
       </div>
     </div>
     <div class="float-right my-auto">
-      <% if (!username) { %>
+      <% if (!user) { %>
       <form class="form-inline" action="/login" method="POST">
-        <input name="username" type="text" placeholder="Username" class="border border-light rounded" style="margin-right: 1em;" >
+        <input name="user" type="text" placeholder="email" class="border border-light rounded" style="margin-right: 1em;" >
         <button type="submit" class="btn btn-outline-dark">Login</button>
       </form>   
       <% } else{ %>
         <form class="form-inline" action="/logout" method="POST">
-          <h5 style="margin-right: 1em;">Logged in as: <%= username %></h5>
+          <h5 style="margin-right: 1em;">Logged in as: <%= user['email'] %></h5>
           <button type="submit" class="btn btn-outline-dark" >Logout</button>
         </form>
         <% } %>

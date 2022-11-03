@@ -36,7 +36,15 @@ const randomID = ()=>{
   const len = 6;
   return Math.random().toString(36).substring(2,len+2);
 }
-
+const findUser = (cookies) =>{
+  if(cookies.user_id) return cookies.user_id;
+  return null;
+}
+const getUserByEmail =(cookies)=>{
+  const user = findUser(cookies);
+  if(user) return user.email;
+  return null ;
+}
  app.get("/urls", (req, res) => {
   const templateVars = { 
     urls: urlDatabase, 
@@ -99,20 +107,28 @@ app.post("/login", (req, res) => {
   
   res.cookie('user_id',{email:req.body.user});
 
-  console.log(req.body.user);
   res.redirect(`/urls`);
 });
 
 app.post("/register", (req, res) => {
-  console.log("herer");
+  
   const randomUserID = randomID();
+  
+  if(req.body.email === '' ||req.body.password === '' 
+  ||req.body.email === getUserByEmail(req.cookies)){
+    res.sendStatus(400);
+  
+  }
+
+  else{
   users[`user${randomUserID}ID`] = {
     id: `user${randomUserID}ID`,
     email: req.body.email,
     password: req.body.password,
   };
-  console.log(users[`user${randomUserID}ID`]);
+
   res.cookie('user_id',users[`user${randomUserID}ID`]);
+}
   res.redirect('/register');
 });
 

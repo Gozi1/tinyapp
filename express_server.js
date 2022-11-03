@@ -59,12 +59,7 @@ const getUserByEmail =(cookies)=>{
      };
   res.render("urls_new",templateVars);
 });
-app.get("/register", (req, res) => {
-  const templateVars = {  
-    user: req.cookies['user_id']
-     };
-  res.render("urls_register",templateVars);
-});
+
 
 
  app.get("/urls/:id", (req, res) => {
@@ -79,7 +74,18 @@ app.get("/register", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
-
+app.get("/register", (req, res) => {
+  const templateVars = {  
+    user: req.cookies['user_id']
+     };
+  res.render("urls_register",templateVars);
+});
+app.get("/login", (req, res) => {
+  const templateVars = {  
+    user: req.cookies['user_id']
+     };
+  res.render("urls_login",templateVars);
+});
  app.post("/urls", (req, res) => {
   // appends a random string to the posted url
   const shortUrl = randomID();

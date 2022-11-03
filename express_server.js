@@ -30,21 +30,27 @@ const users = {
 };
 
 
-
-const randomID = ()=>{
+//Functions
+const randomID = () =>{
   //length of the string 
   const len = 6;
   return Math.random().toString(36).substring(2,len+2);
 }
-const findUser = (cookies) =>{
-  if(cookies.user_id) return cookies.user_id;
+const findUserByEmailAndPassword = (email, password) =>{
+
+  for (const userId in users) {
+      const user = users[userId];
+      if (user.email === email && user.password === password) {
+          return user;
+      }
+  }
   return null;
 }
-const getUserByEmail =(cookies)=>{
-  const user = findUser(cookies);
-  if(user) return user.email;
-  return null ;
-}
+
+
+//Get and post request
+
+//Get all urls
  app.get("/urls", (req, res) => {
   const templateVars = { 
     urls: urlDatabase, 
@@ -53,14 +59,13 @@ const getUserByEmail =(cookies)=>{
   res.render("urls_index",templateVars);
  });
 
+ //Get new url page
  app.get("/urls/new", (req, res) => {
   const templateVars = {  
     user: req.cookies['user_id']
      };
   res.render("urls_new",templateVars);
 });
-
-
 
  app.get("/urls/:id", (req, res) => {
   const templateVars = { 
@@ -70,16 +75,20 @@ const getUserByEmail =(cookies)=>{
   res.render("urls_show",templateVars);
  });
 
+ //Get website for URL
  app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
+
+//Get register
 app.get("/register", (req, res) => {
   const templateVars = {  
     user: req.cookies['user_id']
      };
   res.render("urls_register",templateVars);
 });
+//Get login
 app.get("/login", (req, res) => {
   const templateVars = {  
     user: req.cookies['user_id']
@@ -96,35 +105,47 @@ app.get("/login", (req, res) => {
     user: req.cookies['user_id'] };
   res.render("urls_show",templateVars); 
 });
-
+//Post urls id delete
 app.post("/urls/:id/delete", (req, res) => {
   
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
-
+//Post urls ids update
 app.post("/urls/:id/update", (req, res) => {
   
   urlDatabase[req.params.id] = req.body.newURL;
   res.redirect(`/urls/${req.params.id}`);
 });
-
+//Post Login
 app.post("/login", (req, res) => {
   
-  res.cookie('user_id',{email:req.body.user});
+  const email = req.body.email;
+  const password = req.body.password;
+  const user = findUserByEmailAndPassword(email, password);
+
+  if(user)res.cookie('user_id',user);
+  else return res.status(400).send('user does not exist');
 
   res.redirect(`/urls`);
 });
 
+//Post register
 app.post("/register", (req, res) => {
   
   const randomUserID = randomID();
   
-  if(req.body.email === '' ||req.body.password === '' 
-  ||req.body.email === getUserByEmail(req.cookies)){
-    res.sendStatus(400);
-  
-  }
+  const email = req.body.email;
+  const password = req.body.password;
+    
+  if (!email || !password) {
+        return res.status(400).send('email and password cannot be blank');
+    }
+    const user = findUserByEmailAndPassword(email, password);
+    
+    if (user) {
+        return res.status(400).send("a user with those credentials  already exists");
+    }
 
   else{
   users[`user${randomUserID}ID`] = {
@@ -134,11 +155,15 @@ app.post("/register", (req, res) => {
   };
 
   res.cookie('user_id',users[`user${randomUserID}ID`]);
+  
 }
-  res.redirect('/register');
+
+res.redirect('/urls');
 });
 
+//Post logout
 app.post("/logout", (req, res) => {
+
   res.clearCookie('user_id');
   res.redirect(`/urls`);
 });

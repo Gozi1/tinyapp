@@ -64,7 +64,10 @@ const findUserByEmailAndPassword = (email, password) =>{
     urls: urlDatabase, 
     user: users[userID]
      };
-  res.render("urls_index",templateVars);
+
+     //if not logged in redirect to login page 
+     if(!userID) res.redirect('/login');
+     else res.render("urls_index",templateVars);
  });
 
  // Get request for adding new urls
@@ -73,23 +76,37 @@ const findUserByEmailAndPassword = (email, password) =>{
   const templateVars = {  
     user: users[userID]
      };
-  res.render("urls_new",templateVars);
+  
+  //if not logged in redirect to login page 
+  if(!userID) res.redirect('/login');
+  else res.render("urls_new",templateVars);
 });
 
 // Get request for a specific url ID
  app.get("/urls/:id", (req, res) => {
   const userID =req.cookies['user_id']
+  const ID =req.params.id;
   const templateVars = { 
-    id: req.params.id, 
-    longURL:urlDatabase[req.params.id],
+    id: ID, 
+    longURL:urlDatabase[ID],
     user: users[userID] };
-  res.render("urls_show",templateVars);
+  if(!userID) res.redirect('/login');
+  else{
+
+    if(!urlDatabase[ID]) return res.status(400).send("URL does not exist in our database");
+  
+     res.render("urls_show",templateVars);
+    }
  });
 
 // Get request for the actual website of the shortened url
  app.get("/u/:id", (req, res) => {
   const userID =req.cookies['user_id']
-  const longURL = urlDatabase[req.params.id];
+  const ID =req.params.id;
+  const longURL = urlDatabase[ID];
+  //urls does not exist sends message
+  if(!longURL) return res.status(400).send("URL does not exist in our database");
+
   res.redirect(longURL);
 });
 
@@ -99,7 +116,10 @@ app.get("/register", (req, res) => {
   const templateVars = {  
     user: users[userID]
      };
-  res.render("urls_register",templateVars);
+
+  //if logged in redirect to urls page
+  if(userID) res.redirect('/urls');
+  else res.render("urls_register",templateVars);
 });
 // Get request for logging in as an exist user page
 app.get("/login", (req, res) => {
@@ -107,7 +127,10 @@ app.get("/login", (req, res) => {
   const templateVars = {  
     user: users[userID]
      };
-  res.render("urls_login",templateVars);
+
+     //if logged in redirect to urls page
+     if(userID) res.redirect('/urls');
+     else res.render("urls_login",templateVars);
 });
 
 // Post request for 
@@ -119,6 +142,8 @@ app.get("/login", (req, res) => {
     id: shortUrl, 
     longURL:urlDatabase[shortUrl],
     user: req.cookies['user_id'] };
+  //if not logged in error message
+  if(!userID) return res.status(400).send('Unidentified user cannot make requests');
   res.render("urls_show",templateVars); 
 });
 // Post request for deleting a specific url in the database
@@ -155,8 +180,7 @@ app.post("/register", (req, res) => {
   const randomUserID = randomID();
   
   const email = req.body.email;
-  const password = req.body.password;
-    
+  const password = req.body.password; 
   if (!email || !password) {
         return res.status(400).send('email and password cannot be blank');
     }

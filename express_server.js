@@ -32,18 +32,21 @@ const users = {
 
 
 //Functions
+
+//generates a random ID
 const randomID = () =>{
   //length of the string 
   const len = 6;
   return Math.random().toString(36).substring(2,len+2);
 }
+
 const findUserByEmailAndPassword = (email, password) =>{
 
   for (const userId in users) {
       const user = users[userId];
       if (user.email === email) {
           if(user.password === password) return user;
-
+          //if password is wrong but email exist 
           else return undefined;
       }
       
@@ -64,7 +67,7 @@ const findUserByEmailAndPassword = (email, password) =>{
   res.render("urls_index",templateVars);
  });
 
- //Get new url page
+ // Get request for adding new urls
  app.get("/urls/new", (req, res) => {
   const userID =req.cookies['user_id']
   const templateVars = {  
@@ -73,6 +76,7 @@ const findUserByEmailAndPassword = (email, password) =>{
   res.render("urls_new",templateVars);
 });
 
+// Get request for a specific url ID
  app.get("/urls/:id", (req, res) => {
   const userID =req.cookies['user_id']
   const templateVars = { 
@@ -82,14 +86,14 @@ const findUserByEmailAndPassword = (email, password) =>{
   res.render("urls_show",templateVars);
  });
 
- //Get website for URL
+// Get request for the actual website of the shortened url
  app.get("/u/:id", (req, res) => {
   const userID =req.cookies['user_id']
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
 
-//Get register
+// Get request for making a new user page 
 app.get("/register", (req, res) => {
   const userID =req.cookies['user_id']
   const templateVars = {  
@@ -97,7 +101,7 @@ app.get("/register", (req, res) => {
      };
   res.render("urls_register",templateVars);
 });
-//Get login
+// Get request for logging in as an exist user page
 app.get("/login", (req, res) => {
   const userID =req.cookies['user_id']
   const templateVars = {  
@@ -105,6 +109,8 @@ app.get("/login", (req, res) => {
      };
   res.render("urls_login",templateVars);
 });
+
+// Post request for 
  app.post("/urls", (req, res) => {
   // appends a random string to the posted url
   const shortUrl = randomID();
@@ -115,27 +121,27 @@ app.get("/login", (req, res) => {
     user: req.cookies['user_id'] };
   res.render("urls_show",templateVars); 
 });
-//Post urls id delete
+// Post request for deleting a specific url in the database
 app.post("/urls/:id/delete", (req, res) => {
   
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
-//Post urls ids update
+// Post request for updating a specific url in the database
 app.post("/urls/:id/update", (req, res) => {
   
   urlDatabase[req.params.id] = req.body.newURL;
   res.redirect(`/urls/${req.params.id}`);
 });
-//Post Login
+// Post request for login with conditions to prevent wrong login
 app.post("/login", (req, res) => {
-  
+
   const email = req.body.email;
   const password = req.body.password;
   const user = findUserByEmailAndPassword(email, password);
 
   if(user)res.cookie('user_id',user.id);
-
+  //if user email exist but wrong password user returns undefined
   else if(user === undefined) return res.status(403).send('wrong password');
 
   else return res.status(403).send('user does not exist');
@@ -143,7 +149,7 @@ app.post("/login", (req, res) => {
   res.redirect(`/urls`);
 });
 
-//Post register
+// Post request for  registering a new user
 app.post("/register", (req, res) => {
   
   const randomUserID = randomID();
@@ -174,13 +180,14 @@ app.post("/register", (req, res) => {
 res.redirect('/urls');
 });
 
-//Post logout
+// Post request for logging out
 app.post("/logout", (req, res) => {
 
   res.clearCookie('user_id');
   res.redirect(`/login`);
 });
 
+//Listen request
  app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });

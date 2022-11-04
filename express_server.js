@@ -12,9 +12,16 @@ app.use(cookieParser());
 
 
 
+
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
 const users = {
@@ -60,14 +67,21 @@ const findUserByEmailAndPassword = (email, password) =>{
 //Get all urls
  app.get("/urls", (req, res) => {
   const userID =req.cookies['user_id'];
+  
   const templateVars = { 
-    urls: urlDatabase, 
+    urls: urlDatabase,
     user: users[userID]
      };
 
      //if not logged in redirect to login page 
-     if(!userID) res.redirect('/login');
-     else res.render("urls_index",templateVars);
+    //  if(!userID) res.redirect('/login');
+    //  else res.render("urls_index",templateVars);
+    if(!userID){
+
+      templateVars.message = "Please log in or register to view your urls"
+      res.render("error_page",templateVars);
+
+    } else res.render("urls_index",templateVars);
  });
 
  // Get request for adding new urls
@@ -88,7 +102,7 @@ const findUserByEmailAndPassword = (email, password) =>{
   const ID =req.params.id;
   const templateVars = { 
     id: ID, 
-    longURL:urlDatabase[ID],
+    longURL:urlDatabase[ID].longURL,
     user: users[userID] };
   if(!userID) res.redirect('/login');
   else{
@@ -103,7 +117,7 @@ const findUserByEmailAndPassword = (email, password) =>{
  app.get("/u/:id", (req, res) => {
   const userID =req.cookies['user_id']
   const ID =req.params.id;
-  const longURL = urlDatabase[ID];
+  const longURL = urlDatabase[ID].longURL;
   //urls does not exist sends message
   if(!longURL) return res.status(400).send("URL does not exist in our database");
 
@@ -133,15 +147,18 @@ app.get("/login", (req, res) => {
      else res.render("urls_login",templateVars);
 });
 
-// Post request for 
+// Post request for  creating new urls
  app.post("/urls", (req, res) => {
   // appends a random string to the posted url
   const shortUrl = randomID();
-  urlDatabase[shortUrl] = req.body.longURL;
+  const userID =req.cookies['user_id']
+
+  urlDatabase[shortUrl].longURL = req.body.longURL;
+  urlDatabase[shortUrl].userID = userID;
   const templateVars = { 
     id: shortUrl, 
-    longURL:urlDatabase[shortUrl],
-    user: req.cookies['user_id'] };
+    longURL:urlDatabase[shortUrl].longURL,
+    user: userID };
   //if not logged in error message
   if(!userID) return res.status(400).send('Unidentified user cannot make requests');
   res.render("urls_show",templateVars); 
@@ -155,7 +172,7 @@ app.post("/urls/:id/delete", (req, res) => {
 // Post request for updating a specific url in the database
 app.post("/urls/:id/update", (req, res) => {
   
-  urlDatabase[req.params.id] = req.body.newURL;
+  urlDatabase[req.params.id].longURL = req.body.newURL;
   res.redirect(`/urls/${req.params.id}`);
 });
 // Post request for login with conditions to prevent wrong login

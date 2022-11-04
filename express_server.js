@@ -60,7 +60,16 @@ const findUserByEmailAndPassword = (email, password) =>{
   }
   return null;
 }
-
+const findURLS = (Database,id)=>{
+  // Convert `obj` to a key/value array
+  const asArray = Object.entries(Database);
+  // filters array to find items with id
+  const filtered = asArray.filter(([key, value]) => value.userID === id );
+  // converts array back to obect
+  const fitleredObj = Object.fromEntries(filtered);
+  
+  return fitleredObj;
+}
 
 //Get and post request
 
@@ -69,7 +78,7 @@ const findUserByEmailAndPassword = (email, password) =>{
   const userID =req.cookies['user_id'];
   
   const templateVars = { 
-    urls: urlDatabase,
+    urls: findURLS(urlDatabase,userID), 
     user: users[userID]
      };
 

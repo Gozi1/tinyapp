@@ -4,7 +4,7 @@ var cookieSession = require('cookie-session')
 const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; // default port 8080
-
+const {getUserByEmail,urlsForUser,randomID} = require("./helpers");
 app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
@@ -45,35 +45,7 @@ const users = {
 //Functions
 
 //generates a random ID
-const randomID = () =>{
-  //length of the string 
-  const len = 6;
-  return Math.random().toString(36).substring(2,len+2);
-}
 
-const findUserByEmailAndPassword = (email, password) =>{
-  
-  for (const userId in users) {
-      const user = users[userId];
-      if (user.email === email) {
-          if( bcrypt.compareSync(password,user.password) ) return user;
-          //if password is wrong but email exist 
-          else return undefined;
-      }
-      
-  }
-  return null;
-}
-const urlsForUser = (id)=>{
-  // Convert `obj` to a key/value array
-  const asArray = Object.entries(urlDatabase);
-  // filters array to find items with id
-  const filtered = asArray.filter(([key, value]) => value.userID === id );
-  // converts array back to obect
-  const fitleredObj = Object.fromEntries(filtered);
-  
-  return fitleredObj;
-}
 
 //Get and post request
 
@@ -83,7 +55,7 @@ const urlsForUser = (id)=>{
   const userID =req.session.user_id;
   
   const templateVars = { 
-    urls: urlsForUser(userID), 
+    urls: urlsForUser(userID,urlDatabase), 
     user: users[userID]
      };
 
@@ -121,7 +93,7 @@ const urlsForUser = (id)=>{
     id: ID, 
     longURL:longURL.longURL,
     user: users[userID] };
-  const userKeys =  Object.keys(urlsForUser(userID));
+  const userKeys =  Object.keys(urlsForUser(userID,urlDatabase));
  //urls does not exist 
   if(!longURL){
     res.status(400)
@@ -212,7 +184,7 @@ app.post("/urls/:id/delete", (req, res) => {
   const userID =req.session.user_id
   const ID =req.params.id;
   const longURL = urlDatabase[ID];
-  const userKeys =  Object.keys(urlsForUser(userID));
+  const userKeys =  Object.keys(urlsForUser(userID,urlDatabase));
   const templateVars = {  
     user: users[userID]
      };
@@ -244,7 +216,7 @@ app.post("/urls/:id/update", (req, res) => {
   const userID =req.session.user_id
   const ID =req.params.id;
   const URL = urlDatabase[ID];
-  const userKeys =  Object.keys(urlsForUser(userID));
+  const userKeys =  Object.keys(urlsForUser(userID,urlDatabase));
   const templateVars = {  
     user: users[userID]
      };   
@@ -276,12 +248,15 @@ app.post("/login", (req, res) => {
 
   const email = req.body.email;
   const password = req.body.password;
-  const user = findUserByEmailAndPassword(email, password);
+  const user = getUserByEmail(email, users);
 
-  if(user)req.session.user_id = user.id;
+  
+  if (!email || !password) {
+    return res.status(400).send('email and password cannot be blank');
+}
   //if user email exist but wrong password user returns undefined
-  else if(user === undefined) return res.status(403).send('wrong password');
-
+  else if(!bcrypt.compareSync(password,user.password)) return res.status(403).send('wrong password');
+  else if(user)req.session.user_id = user.id;
   else return res.status(403).send('user does not exist');
 
   res.redirect(`/urls`);
@@ -295,14 +270,14 @@ app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password; 
   const hashedPassword = bcrypt.hashSync(password, 10);
+  const user = getUserByEmail(email, users);
   if (!email || !password) {
         return res.status(400).send('email and password cannot be blank');
     }
-    const user = findUserByEmailAndPassword(email, password);
-    if (user || user === undefined) {
+     //if user exist
+  else if (user) {
         return res.status(400).send("a user similar credentials already exists");
     }
-
   else{
   users[randomUserID] = {
     id:randomUserID,
@@ -319,8 +294,8 @@ res.redirect('/urls');
 
 // Post request for logging out
 app.post("/logout", (req, res) => {
-
-  res.clearCookie('user_id');
+    
+  req.session.user_id = undefined;
   res.redirect(`/login`);
 });
 
@@ -328,3 +303,5 @@ app.post("/logout", (req, res) => {
  app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+module.exports = {getUserByEmail};

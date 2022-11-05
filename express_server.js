@@ -60,7 +60,7 @@ const findUserByEmailAndPassword = (email, password) =>{
   }
   return null;
 }
-const findURLS = (id)=>{
+const urlsForUser = (id)=>{
   // Convert `obj` to a key/value array
   const asArray = Object.entries(urlDatabase);
   // filters array to find items with id
@@ -73,12 +73,13 @@ const findURLS = (id)=>{
 
 //Get and post request
 
+
 //Get all urls
  app.get("/urls", (req, res) => {
   const userID =req.cookies['user_id'];
   
   const templateVars = { 
-    urls: findURLS(userID), 
+    urls: urlsForUser(userID), 
     user: users[userID]
      };
 
@@ -105,33 +106,56 @@ const findURLS = (id)=>{
   else res.render("urls_new",templateVars);
 });
 
+
 // Get request for a specific url ID
  app.get("/urls/:id", (req, res) => {
   const userID =req.cookies['user_id']
   const ID =req.params.id;
+  const longURL = urlDatabase[ID];
+  
   const templateVars = { 
     id: ID, 
-    longURL:urlDatabase[ID].longURL,
+    longURL:longURL.longURL,
     user: users[userID] };
-  if(!userID) res.redirect('/login');
+  const userKeys =  Object.keys(urlsForUser(userID));
+ //urls does not exist 
+  if(!longURL){
+    res.status(400)
+    templateVars.message = "URL Does not exist"
+    res.render("error_page",templateVars)
+    return ;
+ }
+  //user isnt logged in
+  if(!userID){
+    templateVars.message = "Please login or register"
+    res.render("error_page",templateVars)
+    return;
+  }
+  // if user doesnt own that url 
+  if(!userKeys.includes(ID) ){
+    templateVars.message = "You do not have access to this url"
+    res.render("error_page",templateVars)
+    return;
+  }
   else{
-
-    if(!urlDatabase[ID]) return res.status(400).send("URL does not exist in our database");
-  
+    //url doesnt exist
      res.render("urls_show",templateVars);
     }
  });
+
 
 // Get request for the actual website of the shortened url
  app.get("/u/:id", (req, res) => {
   const userID =req.cookies['user_id']
   const ID =req.params.id;
-  const longURL = urlDatabase[ID].longURL;
+  const longURLObj = urlDatabase[ID];
   //urls does not exist sends message
-  if(!longURL) return res.status(400).send("URL does not exist in our database");
+  console.log(Object.keys(urlDatabase))
+  if(!longURLObj) return res.status(400).send("URL does not exist in our database");
 
-  res.redirect(longURL);
+  res.redirect(longURLObj.longURL);
 });
+
 
 // Get request for making a new user page 
 app.get("/register", (req, res) => {
@@ -144,6 +168,8 @@ app.get("/register", (req, res) => {
   if(userID) res.redirect('/urls');
   else res.render("urls_register",templateVars);
 });
+
+
 // Get request for logging in as an exist user page
 app.get("/login", (req, res) => {
   const userID =req.cookies['user_id']
@@ -156,34 +182,93 @@ app.get("/login", (req, res) => {
      else res.render("urls_login",templateVars);
 });
 
+
 // Post request for  creating new urls
  app.post("/urls", (req, res) => {
   // appends a random string to the posted url
   const shortUrl = randomID();
   const userID =req.cookies['user_id']
 
-  urlDatabase[shortUrl].longURL = req.body.longURL;
+  const longURL = req.body.longURL;
+  
+  urlDatabase[shortUrl] = {};
+  urlDatabase[shortUrl].longURL =longURL;
   urlDatabase[shortUrl].userID = userID;
   const templateVars = { 
     id: shortUrl, 
-    longURL:urlDatabase[shortUrl].longURL,
-    user: userID };
+    longURL:longURL,
+    user: users[userID] };
   //if not logged in error message
   if(!userID) return res.status(400).send('Unidentified user cannot make requests');
   res.render("urls_show",templateVars); 
 });
+
+
 // Post request for deleting a specific url in the database
 app.post("/urls/:id/delete", (req, res) => {
-  
+  const userID =req.cookies['user_id']
+  const ID =req.params.id;
+  const longURL = urlDatabase[ID];
+  const userKeys =  Object.keys(urlsForUser(userID));
+  const templateVars = {  
+    user: users[userID]
+     };
+  if(!longURL){
+    res.status(400)
+    templateVars.message = "URL Does not exist"
+    res.render("error_page",templateVars)
+    return ;
+  }
+  if(!userID){
+    res.status(400)
+    templateVars.message = "user is not logged in"
+    res.render("error_page",templateVars)
+    return ;
+  }
+  if(!userKeys.includes(ID)){
+    res.status(400)
+    templateVars.message = "user does not own the URL"
+    res.render("error_page",templateVars)
+    return ;
+  }
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
+
+
 // Post request for updating a specific url in the database
 app.post("/urls/:id/update", (req, res) => {
-  
+  const userID =req.cookies['user_id']
+  const ID =req.params.id;
+  const URL = urlDatabase[ID];
+  const userKeys =  Object.keys(urlsForUser(userID));
+  const templateVars = {  
+    user: users[userID]
+     };
+  console.log(URL)   
+  if(!URL){
+    res.status(400).send("URL does not exists");
+    templateVars.message = "URL Does not exist"
+    res.render("error_page",templateVars)
+    return ;
+  }
+  if(!userID){
+    res.status(400)
+    templateVars.message = "user is not logged in"
+    res.render("error_page",templateVars)
+    return ;
+  }
+  if(!userKeys.includes(ID)){
+    res.status(400)
+    templateVars.message = "user does not own the URL"
+    res.render("error_page",templateVars)
+    return ;
+  }
   urlDatabase[req.params.id].longURL = req.body.newURL;
   res.redirect(`/urls/${req.params.id}`);
 });
+
+
 // Post request for login with conditions to prevent wrong login
 app.post("/login", (req, res) => {
 
@@ -211,7 +296,6 @@ app.post("/register", (req, res) => {
         return res.status(400).send('email and password cannot be blank');
     }
     const user = findUserByEmailAndPassword(email, password);
-    console.log(user);
     if (user || user === undefined) {
         return res.status(400).send("a user similar credentials already exists");
     }

@@ -18,12 +18,12 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>   
       </div>
     </div>
-    <div class="float-right my-auto">
+    <div class="float-right my-auto d-flex flex-row ">
       <% if (!user) { %>
-        <form action="/register" method="GET">
-          <button type="submit" class="btn btn-outline-dark" >Register</button>
+        <form  action="/register" method="GET">
+          <button type="submit" class="btn btn-outline-dark" style="margin-right: 1em;" >Register</button>
       </form>
-      <form action="/login" method="GET">
+      <form  action="/login" method="GET">
         <button type="submit" class="btn btn-outline-dark">Login</button>
     </form>        
       <% } else{ %>

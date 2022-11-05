@@ -8,7 +8,7 @@ const {getUserByEmail,urlsForUser,randomID} = require("./helpers");
 app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
-
+app.use( express.static( "public" ) );
 app.use(cookieSession({
   name: 'session',
   keys: ['key1', 'key2']

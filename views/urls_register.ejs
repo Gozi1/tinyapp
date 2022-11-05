@@ -13,12 +13,14 @@
 
   <body>
     <%- include('partials/_header') %>
-    <div>
-        <form method="POST" action='/register' >
-          <label for="register" class="text-muted h5" >Register: </label>
-          <input class="text-muted"name= "email" type="email" style="width: 300px"/>
-          <input class="text-muted"name= "password" type="password" style="width: 300px"/>
-          <button type="submit" style = "width: 100px;" class ="btn btn-primary">Submit</button>
+    <div >
+        <form  class="d-flex flex-column mb-3 " method="POST" action='/register' >
+          <label for="register" class="text-dark h1 m-3" >Create Account </label>
+          <label for="register" class="text-dark h5 m-2" >Email Address  </label>
+          <input class="text-muted m-2"name= "email" type="email" style="width: 300px; border-radius: 0.3rem;border-width: 0.1rem;"/>
+          <label for="register" class="text-dark h5 m-2" >Password </label>
+          <input class="text-muted m-2"name= "password" type="password" style="width: 300px; border-radius: 0.3rem; border-width: 0.1rem;"/>
+          <button type="submit" style = "width: 100px; border-radius: 0.3rem" class ="btn btn-primary m-1">Submit</button>
         </form>
       </div>
     <!-- Bootstrap JS -->

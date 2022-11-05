@@ -1,6 +1,6 @@
 /** TO MENTOR I'LL MAKE SURE TO ADD THE CSS STYLING TOWARDS AT THE END OF TESTING OR REST */
 const express = require("express");
-const  cookieParser = require('cookie-parser');
+var cookieSession = require('cookie-session')
 const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; // default port 8080
@@ -9,7 +9,10 @@ app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
 
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2']
+}))
 
 
 
@@ -77,7 +80,7 @@ const urlsForUser = (id)=>{
 
 //Get all urls
  app.get("/urls", (req, res) => {
-  const userID =req.cookies['user_id'];
+  const userID =req.session.user_id;
   
   const templateVars = { 
     urls: urlsForUser(userID), 
@@ -97,7 +100,7 @@ const urlsForUser = (id)=>{
 
  // Get request for adding new urls
  app.get("/urls/new", (req, res) => {
-  const userID =req.cookies['user_id']
+  const userID =req.session.user_id
   const templateVars = {  
     user: users[userID]
      };
@@ -110,7 +113,7 @@ const urlsForUser = (id)=>{
 
 // Get request for a specific url ID
  app.get("/urls/:id", (req, res) => {
-  const userID =req.cookies['user_id']
+  const userID =req.session.user_id
   const ID =req.params.id;
   const longURL = urlDatabase[ID];
   
@@ -147,7 +150,7 @@ const urlsForUser = (id)=>{
 
 // Get request for the actual website of the shortened url
  app.get("/u/:id", (req, res) => {
-  const userID =req.cookies['user_id']
+  const userID =req.session.user_id
   const ID =req.params.id;
   const longURLObj = urlDatabase[ID];
   //urls does not exist sends message
@@ -159,7 +162,7 @@ const urlsForUser = (id)=>{
 
 // Get request for making a new user page 
 app.get("/register", (req, res) => {
-  const userID =req.cookies['user_id']
+  const userID =req.session.user_id
   const templateVars = {  
     user: users[userID]
      };
@@ -172,7 +175,7 @@ app.get("/register", (req, res) => {
 
 // Get request for logging in as an exist user page
 app.get("/login", (req, res) => {
-  const userID =req.cookies['user_id']
+  const userID =req.session.user_id
   const templateVars = {  
     user: users[userID]
      };
@@ -187,7 +190,7 @@ app.get("/login", (req, res) => {
  app.post("/urls", (req, res) => {
   // appends a random string to the posted url
   const shortUrl = randomID();
-  const userID =req.cookies['user_id']
+  const userID =req.session.user_id
 
   const longURL = req.body.longURL;
   
@@ -206,7 +209,7 @@ app.get("/login", (req, res) => {
 
 // Post request for deleting a specific url in the database
 app.post("/urls/:id/delete", (req, res) => {
-  const userID =req.cookies['user_id']
+  const userID =req.session.user_id
   const ID =req.params.id;
   const longURL = urlDatabase[ID];
   const userKeys =  Object.keys(urlsForUser(userID));
@@ -238,7 +241,7 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // Post request for updating a specific url in the database
 app.post("/urls/:id/update", (req, res) => {
-  const userID =req.cookies['user_id']
+  const userID =req.session.user_id
   const ID =req.params.id;
   const URL = urlDatabase[ID];
   const userKeys =  Object.keys(urlsForUser(userID));
@@ -275,7 +278,7 @@ app.post("/login", (req, res) => {
   const password = req.body.password;
   const user = findUserByEmailAndPassword(email, password);
 
-  if(user)res.cookie('user_id',user.id);
+  if(user)req.session.user_id = user.id;
   //if user email exist but wrong password user returns undefined
   else if(user === undefined) return res.status(403).send('wrong password');
 
@@ -307,7 +310,7 @@ app.post("/register", (req, res) => {
     password: hashedPassword,
   };
 
-  res.cookie('user_id',users[randomUserID].id);
+  req.session.user_id = users[randomUserID].id
   
 }
 

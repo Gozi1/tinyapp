@@ -1,6 +1,7 @@
 /** TO MENTOR I'LL MAKE SURE TO ADD THE CSS STYLING TOWARDS AT THE END OF TESTING OR REST */
 const express = require("express");
 const  cookieParser = require('cookie-parser');
+const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -25,15 +26,15 @@ const urlDatabase = {
 };
 
 const users = {
-  userRandomID: {
+  aJ48lW: {
     id: "aJ48lW",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password: bcrypt.hashSync("ab",10),
   },
   user2RandomID: {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk",
+    password: bcrypt.hashSync("ab",10),
   },
 };
 
@@ -48,11 +49,11 @@ const randomID = () =>{
 }
 
 const findUserByEmailAndPassword = (email, password) =>{
-
+  
   for (const userId in users) {
       const user = users[userId];
       if (user.email === email) {
-          if(user.password === password) return user;
+          if( bcrypt.compareSync(password,user.password) ) return user;
           //if password is wrong but email exist 
           else return undefined;
       }
@@ -91,7 +92,7 @@ const urlsForUser = (id)=>{
       templateVars.message = "Please log in or register to view your urls"
       res.render("error_page",templateVars);
 
-    } else res.render("urls_index",templateVars);
+    } else { res.render("urls_index",templateVars);}
  });
 
  // Get request for adding new urls
@@ -150,7 +151,6 @@ const urlsForUser = (id)=>{
   const ID =req.params.id;
   const longURLObj = urlDatabase[ID];
   //urls does not exist sends message
-  console.log(Object.keys(urlDatabase))
   if(!longURLObj) return res.status(400).send("URL does not exist in our database");
 
   res.redirect(longURLObj.longURL);
@@ -244,8 +244,7 @@ app.post("/urls/:id/update", (req, res) => {
   const userKeys =  Object.keys(urlsForUser(userID));
   const templateVars = {  
     user: users[userID]
-     };
-  console.log(URL)   
+     };   
   if(!URL){
     res.status(400).send("URL does not exists");
     templateVars.message = "URL Does not exist"
@@ -292,6 +291,7 @@ app.post("/register", (req, res) => {
   
   const email = req.body.email;
   const password = req.body.password; 
+  const hashedPassword = bcrypt.hashSync(password, 10);
   if (!email || !password) {
         return res.status(400).send('email and password cannot be blank');
     }
@@ -301,13 +301,13 @@ app.post("/register", (req, res) => {
     }
 
   else{
-  users[`user${randomUserID}ID`] = {
-    id: `user${randomUserID}ID`,
-    email: req.body.email,
-    password: req.body.password,
+  users[randomUserID] = {
+    id:randomUserID,
+    email: email,
+    password: hashedPassword,
   };
 
-  res.cookie('user_id',users[`user${randomUserID}ID`].id);
+  res.cookie('user_id',users[randomUserID].id);
   
 }
 

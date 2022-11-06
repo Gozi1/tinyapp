@@ -1,4 +1,4 @@
-/** TO MENTOR I'LL MAKE SURE TO ADD THE CSS STYLING TOWARDS AT THE END OF TESTING OR REST */
+
 const express = require("express");
 let cookieSession = require('cookie-session');
 const bcrypt = require("bcryptjs");
@@ -41,15 +41,6 @@ const users = {
   },
 };
 
-
-//Functions
-
-//generates a random ID
-
-
-//Get and post request
-
-
 //Get all urls
 app.get("/urls", (req, res) => {
   const userID = req.session.user_id;
@@ -58,10 +49,6 @@ app.get("/urls", (req, res) => {
     urls: urlsForUser(userID,urlDatabase),
     user: users[userID]
   };
-
-  //if not logged in redirect to login page
-  //  if(!userID) res.redirect('/login');
-  //  else res.render("urls_index",templateVars);
   if (!userID) {
     res.status(400);
     templateVars.message = "Please log in or register to view your urls";

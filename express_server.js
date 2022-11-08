@@ -4,7 +4,10 @@ let cookieSession = require('cookie-session');
 const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080; // default port 8080
+
+
 const {getUserByEmail,urlsForUser,randomID} = require("./helpers");
+const {urlDatabase,users} = require("./data");
 app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
@@ -17,30 +20,11 @@ app.use(cookieSession({
 
 
 
-const urlDatabase = {
-  b6UTxQ: {
-    longURL: "https://www.tsn.ca",
-    userID: "aJ48lW",
-  },
-  i3BoGr: {
-    longURL: "https://www.google.ca",
-    userID: "aJ48lW",
-  },
-};
-
-const users = {
-  aJ48lW: {
-    id: "aJ48lW",
-    email: "user@example.com",
-    password: bcrypt.hashSync("ab",10),
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: bcrypt.hashSync("ab",10),
-  },
-};
-
+app.get("/",(req,res) => {
+  const userID = req.session.user_id;
+  if(userID)res.redirect("/urls");
+  else res.redirect("/login");
+})
 //Get all urls
 app.get("/urls", (req, res) => {
   const userID = req.session.user_id;
